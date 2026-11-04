@@ -37,5 +37,13 @@ class OrderCustomerIntegrationTest extends AbstractIntegrationTest {
         List<Long> productIds = jdbcTemplate.queryForList(
                 "SELECT product_id FROM order_items ORDER BY id", Long.class);
         assertThat(productIds).containsExactly(productId, productId);
+
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT first_name FROM customers WHERE id = ?", String.class, customerId))
+                .isEqualTo("Анна");
+
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT last_name FROM customers WHERE id = ?", String.class, customerId))
+                .isEqualTo("Иванова");
     }
 }

@@ -11,17 +11,24 @@ import jakarta.persistence.Table;
 @Table(name = "customers")
 public class Customer {
 
+    private static final int FULL_NAME_MAX_LENGTH = 255;
+    private static final int ADDRESS_MAX_LENGTH = 500;
+    private static final int PHONE_MAX_LENGTH = 50;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "full_name", nullable = false, length = 255)
-    private String fullName;
+    @Column(name = "first_name", length = FULL_NAME_MAX_LENGTH)
+    private String firstName;
 
-    @Column(length = 500)
+    @Column(name = "last_name", length = FULL_NAME_MAX_LENGTH)
+    private String lastName;
+
+    @Column(length = ADDRESS_MAX_LENGTH)
     private String address;
 
-    @Column(length = 50)
+    @Column(length = PHONE_MAX_LENGTH)
     private String phone;
 
     protected Customer() {
@@ -33,7 +40,7 @@ public class Customer {
     }
 
     public String getFullName() {
-        return fullName;
+        return lastName.isEmpty() ? firstName : firstName + " " + lastName;
     }
 
     public String getAddress() {
