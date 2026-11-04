@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 /**
  * God-класс: валидация, расчёт цены, персистентность и "уведомление
  * клиента" смешаны в одном методе. Цель для рефакторинга по SRP в ЛР1.
@@ -20,26 +21,25 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final PricingCalculator pricingCalculator = new PricingCalculator();
 
+    private final OrderConfirmationNotifier confirmationNotifier;
+
+    private final OrderRequestValidator requestValidator;
+
     public OrderService(
             ProductRepository productRepository,
             OrderRepository orderRepository,
-            OrderItemRepository orderItemRepository) {
+            OrderItemRepository orderItemRepository,
+            OrderConfirmationNotifier confirmationNotifier, OrderRequestValidator requestValidator) {
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
+        this.confirmationNotifier = confirmationNotifier;
+        this.requestValidator = requestValidator;
     }
 
     @Transactional
     public Order createOrder(CreateOrderRequest request) {
-        if (request.customerFullName() == null || request.customerFullName().isBlank()) {
-            throw new IllegalArgumentException("customerFullName is required");
-        }
-        if (request.customerAddress() == null || request.customerAddress().isBlank()) {
-            throw new IllegalArgumentException("customerAddress is required");
-        }
-        if (request.items() == null || request.items().isEmpty()) {
-            throw new IllegalArgumentException("order must contain at least one item");
-        }
+        requestValidator.validate(request);
 
         List<Product> products = new ArrayList<>();
         List<PricingCalculator.LineItem> lineItems = new ArrayList<>();
@@ -67,15 +67,10 @@ public class OrderService {
             orderItemRepository.save(new OrderItem(order.getId(), product.getName(), product.getPrice(), quantity));
         }
 
-        sendConfirmationEmail(request.customerFullName(), order.getId(), total);
+        confirmationNotifier.sendConfirmationEmail(request.customerFullName(), order.getId(), total);
 
         return order;
     }
 
-    private void sendConfirmationEmail(String customerName, Long orderId, BigDecimal total) {
-        // Реальный почтовый транспорт не настроен в учебном проекте - здесь
-        // просто эмулируется побочный эффект отправки письма.
-        System.out.printf(
-                "[email] Dear %s, your order #%d for %s has been placed.%n", customerName, orderId, total);
-    }
+
 }
