@@ -13,12 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ReviewController {
 
-    private final ReviewService reviewService;
+    private final ProductReviews reviewService;
 
-    public ReviewController(ReviewService reviewService) {
+    public ReviewController(ProductReviews reviewService) {
         this.reviewService = reviewService;
     }
-
     @PostMapping("/products/{productId}/reviews")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> addReview(@PathVariable Long productId, @RequestBody Map<String, Object> body) {

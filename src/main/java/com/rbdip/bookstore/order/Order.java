@@ -10,6 +10,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
+import jakarta.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "orders")
 public class Order {
@@ -21,6 +25,10 @@ public class Order {
     @ManyToOne(optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
+
+    @OneToMany
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
+    private List<OrderItem> items = new ArrayList<>();
 
     @Column(nullable = false)
     private String status;
@@ -59,5 +67,9 @@ public class Order {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public List<OrderItem> getItems() {
+        return items;
     }
 }
