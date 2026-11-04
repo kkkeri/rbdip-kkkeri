@@ -25,16 +25,19 @@ public class OrderService {
 
     private final OrderRequestValidator requestValidator;
 
+    private final CustomerRepository customerRepository;
+
     public OrderService(
             ProductRepository productRepository,
             OrderRepository orderRepository,
             OrderItemRepository orderItemRepository,
-            OrderConfirmationNotifier confirmationNotifier, OrderRequestValidator requestValidator) {
+            OrderConfirmationNotifier confirmationNotifier, OrderRequestValidator requestValidator, CustomerRepository customerRepository) {
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.confirmationNotifier = confirmationNotifier;
         this.requestValidator = requestValidator;
+        this.customerRepository = customerRepository;
     }
 
     @Transactional
@@ -57,15 +60,17 @@ public class OrderService {
         BigDecimal total = pricingCalculator.calculateOrderTotal(
                 lineItems, request.customerType() == null ? "regular" : request.customerType(), request.couponCode());
 
-        Order order = new Order(
-                request.customerFullName(), request.customerAddress(), request.customerPhone(), "new");
-        order = orderRepository.save(order);
+        Customer customer = customerRepository.findOrCreate(
+                request.customerFullName(),
+                request.customerAddress(),
+                request.customerPhone());
+
+        Order order = orderRepository.save(new Order(customer, "new"));
 
         for (int i = 0; i < products.size(); i++) {
             Product product = products.get(i);
             int quantity = lineItems.get(i).quantity();
-            orderItemRepository.save(new OrderItem(order.getId(), product.getName(), product.getPrice(), quantity));
-        }
+            orderItemRepository.save(new OrderItem(order.getId(), product, quantity));        }
 
         confirmationNotifier.sendConfirmationEmail(request.customerFullName(), order.getId(), total);
 

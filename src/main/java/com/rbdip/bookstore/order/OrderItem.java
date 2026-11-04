@@ -8,6 +8,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 
+import com.rbdip.bookstore.product.Product;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+
 /**
  * Намеренно денормализовано: дублирует название и цену товара вместо
  * ссылки на products (product_id есть, но name/price скопированы на
@@ -24,11 +28,9 @@ public class OrderItem {
     @Column(name = "order_id", nullable = false)
     private Long orderId;
 
-    @Column(name = "product_name", nullable = false)
-    private String productName;
-
-    @Column(name = "product_price", nullable = false)
-    private BigDecimal productPrice;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
     @Column(nullable = false)
     private Integer quantity;
@@ -37,10 +39,9 @@ public class OrderItem {
         // for JPA
     }
 
-    public OrderItem(Long orderId, String productName, BigDecimal productPrice, Integer quantity) {
+    public OrderItem(Long orderId, Product product, Integer quantity) {
         this.orderId = orderId;
-        this.productName = productName;
-        this.productPrice = productPrice;
+        this.product = product;
         this.quantity = quantity;
     }
 
@@ -53,11 +54,11 @@ public class OrderItem {
     }
 
     public String getProductName() {
-        return productName;
+        return product.getName();
     }
 
     public BigDecimal getProductPrice() {
-        return productPrice;
+        return product.getPrice();
     }
 
     public Integer getQuantity() {
